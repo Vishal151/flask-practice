@@ -27,15 +27,43 @@ from app import app as flask_app
 
 
 @pytest.fixture(scope='function')
-def app():
+def app(monkeypatch):
     """Create and configure a new app instance for each test."""
-    # Use in-memory database for testing
+    # Create a temporary test database
+    db_fd, db_path = tempfile.mkstemp()
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+
+    # Create tables for testing
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username text, password text)"
+    )
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS items (name text PRIMARY KEY, price real)"
+    )
+    connection.commit()
+    connection.close()
+
+    # Store original connect function
+    original_connect = sqlite3.connect
+
+    # Monkeypatch sqlite3.connect to use test database
+    def mock_connect(db_name, *args, **kwargs):
+        return original_connect(db_path, *args, **kwargs)
+
+    monkeypatch.setattr(sqlite3, 'connect', mock_connect)
+
+    # Configure app for testing
     flask_app.config.update({
         'TESTING': True,
         'SECRET_KEY': 'test-secret-key',
     })
 
     yield flask_app
+
+    # Cleanup
+    os.close(db_fd)
+    os.unlink(db_path)
 
 
 @pytest.fixture(scope='function')
