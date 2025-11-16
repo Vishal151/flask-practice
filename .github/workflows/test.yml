@@ -1,0 +1,82 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ staging, master ]
+  pull_request:
+    branches: [ staging, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd SQL_Db_API
+        pip install -r requirements-dev.txt --use-deprecated=legacy-resolver
+
+    - name: Run tests with pytest
+      run: |
+        cd SQL_Db_API
+        python -m pytest tests/ -v --tb=short --maxfail=5
+
+    - name: Run tests with coverage
+      run: |
+        cd SQL_Db_API
+        python -m pytest tests/ --cov=code --cov-report=xml --cov-report=term
+
+    - name: Upload coverage reports
+      if: matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./SQL_Db_API/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black
+
+    - name: Check code formatting with black
+      run: |
+        black --check SQL_Db_API/code/ SQL_Db_API/tests/ || true
+
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 SQL_Db_API/code/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 SQL_Db_API/code/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics

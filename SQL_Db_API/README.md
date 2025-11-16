@@ -1,5 +1,9 @@
 # Flask RESTful API with SQLite
 
+[![Test Suite](https://github.com/Vishal151/flask-practice/actions/workflows/test.yml/badge.svg)](https://github.com/Vishal151/flask-practice/actions/workflows/test.yml)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 A RESTful API built with Flask, featuring user authentication with JWT and item management.
 
 ## Features
@@ -98,27 +102,68 @@ The project includes comprehensive tests for:
 - Item CRUD operations
 - API integration scenarios
 
-### Run all tests:
+### Quick Commands (using Makefile):
+
+```bash
+# Install dependencies
+make install
+
+# Run all tests
+make test
+
+# Run unit tests only
+make test-unit
+
+# Run integration tests
+make test-integration
+
+# Run with coverage report
+make coverage
+
+# Clean test artifacts
+make clean
+
+# See all available commands
+make help
+```
+
+### Manual Testing:
 
 ```bash
 cd SQL_Db_API
+
+# Run all tests
 pytest tests/ -v
-```
 
-### Run with coverage:
-
-```bash
+# Run with coverage
 pytest tests/ --cov=code --cov-report=html --cov-report=term
-```
 
-### Run specific test files:
-
-```bash
+# Run specific test files
 pytest tests/test_user.py -v
 pytest tests/test_security.py -v
 pytest tests/test_item.py -v
 pytest tests/test_api_integration.py -v
 ```
+
+## Continuous Integration
+
+This project uses GitHub Actions for automated testing:
+
+- **Test Suite**: Runs on every push and pull request
+  - Tests across Python 3.9, 3.10, and 3.11
+  - Unit and integration tests
+  - Coverage reporting
+
+- **Pull Request Checks**:
+  - Automated test results posted as comments
+  - Security scanning with Bandit
+  - Dependency vulnerability checks
+
+- **Code Quality**:
+  - Linting with flake8
+  - Code formatting checks with black
+
+See [.github/workflows/](.github/workflows/) for workflow configurations.
 
 ## Test Coverage
 

@@ -1,0 +1,90 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test-summary:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd SQL_Db_API
+        pip install -r requirements-dev.txt --use-deprecated=legacy-resolver
+
+    - name: Run unit tests only
+      id: unit_tests
+      run: |
+        cd SQL_Db_API
+        python -m pytest tests/test_user.py::TestUserModel tests/test_item.py::TestItemModel -v
+      continue-on-error: true
+
+    - name: Run integration tests
+      id: integration_tests
+      run: |
+        cd SQL_Db_API
+        python -m pytest tests/ -v --tb=line
+      continue-on-error: true
+
+    - name: Generate test report
+      if: always()
+      run: |
+        cd SQL_Db_API
+        python -m pytest tests/ --tb=no -q > test_summary.txt || true
+        echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        cat test_summary.txt >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+
+    - name: Comment PR with test results
+      if: always() && github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const testResults = fs.readFileSync('SQL_Db_API/test_summary.txt', 'utf8');
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## 🧪 Test Results\n\n\`\`\`\n${testResults}\n\`\`\`\n\n> Note: Some tests may fail if Flask-JWT is not properly installed. See [TEST_RESULTS.md](../blob/staging/SQL_Db_API/TEST_RESULTS.md) for details.`
+          });
+
+  security-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+
+    - name: Run bandit security scan
+      run: |
+        bandit -r SQL_Db_API/code/ -f json -o bandit-report.json || true
+        bandit -r SQL_Db_API/code/ || true
+      continue-on-error: true
+
+    - name: Check for known vulnerabilities
+      run: |
+        cd SQL_Db_API
+        safety check --file requirements-dev.txt || true
+      continue-on-error: true
