@@ -54,6 +54,23 @@ pip install Flask-JWT-Extended
 
 ## Running the Application
 
+### With Docker (Recommended)
+
+```bash
+# Build and run with Docker Compose
+docker-compose up api
+
+# Or run tests in Docker
+docker-compose run --rm test
+
+# Or use profiles
+docker-compose --profile test up
+```
+
+The API will be available at `http://localhost:5000`.
+
+### Without Docker
+
 ```bash
 cd code
 python app.py
@@ -145,6 +162,54 @@ pytest tests/test_item.py -v
 pytest tests/test_api_integration.py -v
 ```
 
+## Docker Support
+
+This project includes full Docker support for development and testing:
+
+### Development with Docker
+
+```bash
+# Build and run the API
+docker-compose up api
+
+# Run in detached mode
+docker-compose up -d api
+
+# View logs
+docker-compose logs -f api
+
+# Stop services
+docker-compose down
+```
+
+### Testing with Docker
+
+```bash
+# Run all tests (including JWT-dependent tests)
+docker-compose run --rm test
+
+# Run specific tests
+docker-compose run --rm test pytest tests/test_user.py -v
+
+# Run tests with coverage
+docker-compose run --rm test pytest tests/ --cov=code --cov-report=html
+
+# Access coverage report in test-results/htmlcov/
+```
+
+### Building Docker Images
+
+```bash
+# Build production image
+docker build -t flask-api:latest .
+
+# Build test image
+docker build -f Dockerfile.test -t flask-api-test:latest .
+
+# Run production container
+docker run -p 5000:5000 -e SECRET_KEY=your-secret flask-api:latest
+```
+
 ## Continuous Integration
 
 This project uses GitHub Actions for automated testing:
@@ -153,6 +218,7 @@ This project uses GitHub Actions for automated testing:
   - Tests across Python 3.9, 3.10, and 3.11
   - Unit and integration tests
   - Coverage reporting
+  - **Docker-based tests**: Full test suite with Flask-JWT
 
 - **Pull Request Checks**:
   - Automated test results posted as comments
@@ -162,6 +228,12 @@ This project uses GitHub Actions for automated testing:
 - **Code Quality**:
   - Linting with flake8
   - Code formatting checks with black
+
+### Test Results
+
+- **Native Python**: 37 core tests (authentication, CRUD, validation)
+- **Docker Environment**: All 57 tests including JWT-dependent integration tests
+- Tests marked with `@pytest.mark.requires_auth` skip gracefully without Flask-JWT
 
 See [.github/workflows/](.github/workflows/) for workflow configurations.
 
