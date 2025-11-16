@@ -60,6 +60,29 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
 
+  test-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build test Docker image
+      run: docker build -f Dockerfile.test -t flask-api-test .
+
+    - name: Run tests in Docker
+      run: |
+        docker run --rm \
+          -v $(pwd)/test-results:/app/test-results \
+          flask-api-test \
+          pytest tests/ -v --tb=short --cov=code --cov-report=term
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: docker-test-results
+        path: test-results/
+
   lint:
     runs-on: ubuntu-latest
 
