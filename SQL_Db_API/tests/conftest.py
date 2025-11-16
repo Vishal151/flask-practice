@@ -6,11 +6,23 @@ import sys
 import tempfile
 import pytest
 from pathlib import Path
+from unittest.mock import Mock
+import sqlite3
 
 # Add code directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../code'))
 
-import sqlite3
+# Mock flask_jwt if not available
+try:
+    import flask_jwt
+except ImportError:
+    # Create a mock flask_jwt module
+    flask_jwt = Mock()
+    flask_jwt.JWT = Mock(return_value=Mock())
+    flask_jwt.jwt_required = lambda: lambda f: f  # Mock decorator
+    flask_jwt.current_identity = Mock()
+    sys.modules['flask_jwt'] = flask_jwt
+
 from app import app as flask_app
 
 

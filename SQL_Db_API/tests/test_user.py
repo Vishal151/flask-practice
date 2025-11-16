@@ -17,7 +17,7 @@ from passlib.hash import pbkdf2_sha256
 class TestUserModel:
     """Test User model database operations."""
 
-    def setup_method(self):
+    def setup_method(self, monkeypatch=None):
         """Create a temporary database for each test."""
         self.db_fd, self.db_path = tempfile.mkstemp()
         self.connection = sqlite3.connect(self.db_path)
@@ -29,22 +29,21 @@ class TestUserModel:
         )
         self.connection.commit()
 
-        # Monkey patch the database path
-        self.original_db = 'data.db'
-        import user
-        self.original_connect = sqlite3.connect
+        # Store original connection function
+        self._original_connect = sqlite3.connect
 
-        def mock_connect(db_name):
-            return sqlite3.connect(self.db_path)
+        # Monkey patch sqlite3.connect to use test database
+        def mock_connect(db_name, *args, **kwargs):
+            return self._original_connect(self.db_path, *args, **kwargs)
 
         sqlite3.connect = mock_connect
 
     def teardown_method(self):
         """Clean up temporary database."""
+        sqlite3.connect = self._original_connect
         self.connection.close()
         os.close(self.db_fd)
         os.unlink(self.db_path)
-        sqlite3.connect = self.original_connect
 
     def test_find_by_username_existing_user(self):
         """Test finding a user that exists in database."""
