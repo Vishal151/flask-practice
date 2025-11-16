@@ -1,5 +1,6 @@
 import sqlite3
 from flask_restful import Resource, reqparse
+from passlib.hash import pbkdf2_sha256
 
 class User:
 
@@ -68,8 +69,11 @@ class UserRegister(Resource):
         connection = sqlite3.connect('data.db')
         cursor = connection.cursor()
 
+        # Hash the password before storing
+        hashed_password = pbkdf2_sha256.hash(data['password'])
+
         query = "INSERT INTO {table} VALUES (NULL, ?, ?)".format(table=self.TABLE_NAME)
-        cursor.execute(query, (data['username'], data['password']))
+        cursor.execute(query, (data['username'], hashed_password))
 
         connection.commit()
         connection.close()
