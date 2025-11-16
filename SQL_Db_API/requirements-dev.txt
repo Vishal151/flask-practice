@@ -1,0 +1,9 @@
+Flask==2.0.3
+Flask-RESTful==0.3.9
+Flask-JWT==0.3.2
+Werkzeug==2.0.3
+pytest==7.3.1
+pytest-flask==1.2.0
+pytest-cov==4.1.0
+passlib==1.7.4
+python-dotenv==1.0.0
