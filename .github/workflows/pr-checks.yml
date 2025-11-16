@@ -3,6 +3,10 @@ name: Pull Request Checks
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    branches:
+      - master
+      - staging
+      - 'claude/**'
 
 jobs:
   test-summary:

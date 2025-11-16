@@ -2,9 +2,15 @@ name: Test Suite
 
 on:
   push:
-    branches: [ staging, master ]
+    branches:
+      - master
+      - staging
+      - 'claude/**'
   pull_request:
-    branches: [ staging, master ]
+    branches:
+      - master
+      - staging
+      - 'claude/**'
 
 jobs:
   test:
