@@ -1,9 +1,9 @@
-from werkzeug.security import safe_str_cmp
+from passlib.hash import pbkdf2_sha256
 from user import User
 
 def authenticate(username, password):
     user = User.find_by_username(username)
-    if user and safe_str_cmp(user.password, password):
+    if user and pbkdf2_sha256.verify(password, user.password):
         return user
 
 def identity(payload):
