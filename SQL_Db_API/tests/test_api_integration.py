@@ -4,11 +4,13 @@ Tests end-to-end scenarios involving multiple endpoints.
 """
 import sys
 import os
+import pytest
 
 # Add code directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../code'))
 
 
+@pytest.mark.requires_auth
 class TestCompleteUserWorkflow:
     """Test complete user registration and authentication workflow."""
 
@@ -44,6 +46,7 @@ class TestCompleteUserWorkflow:
         assert get_response.json['item']['price'] == 99.99
 
 
+@pytest.mark.requires_auth
 class TestCompleteItemWorkflow:
     """Test complete item CRUD workflow."""
 
@@ -87,6 +90,7 @@ class TestCompleteItemWorkflow:
         assert final_response.status_code == 404
 
 
+@pytest.mark.requires_auth
 class TestMultipleUsers:
     """Test scenarios with multiple users."""
 
@@ -131,6 +135,7 @@ class TestMultipleUsers:
         assert response.status_code == 401
 
 
+@pytest.mark.requires_auth
 class TestMultipleItems:
     """Test scenarios with multiple items."""
 
@@ -162,6 +167,7 @@ class TestMultipleItems:
             assert item_dict[name] == price
 
 
+@pytest.mark.requires_auth
 class TestAuthenticationBoundaries:
     """Test authentication edge cases."""
 
@@ -195,6 +201,7 @@ class TestAuthenticationBoundaries:
         assert response.status_code == 401
 
 
+@pytest.mark.requires_auth
 class TestDataPersistence:
     """Test data persistence across operations."""
 
@@ -231,6 +238,7 @@ class TestDataPersistence:
             assert 'access_token' in response.json
 
 
+@pytest.mark.requires_auth
 class TestConcurrentOperations:
     """Test concurrent-like operations."""
 
@@ -255,6 +263,7 @@ class TestConcurrentOperations:
         assert response.json['item']['price'] == 40.00
 
 
+@pytest.mark.requires_auth
 class TestCompleteScenario:
     """Test a complete realistic scenario."""
 

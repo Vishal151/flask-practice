@@ -134,6 +134,7 @@ class TestItemEndpoints:
 
         assert response.status_code == 400
 
+    @pytest.mark.requires_auth
     def test_get_existing_item_with_auth(self, client):
         """Test getting an existing item with JWT token."""
         token = self.get_auth_token(client)
@@ -150,6 +151,7 @@ class TestItemEndpoints:
         assert response.json['item']['name'] == 'laptop'
         assert response.json['item']['price'] == 999.99
 
+    @pytest.mark.requires_auth
     def test_get_item_without_auth(self, client):
         """Test getting an item without JWT token (should fail)."""
         # Create item
@@ -160,6 +162,7 @@ class TestItemEndpoints:
 
         assert response.status_code == 401
 
+    @pytest.mark.requires_auth
     def test_get_nonexistent_item(self, client):
         """Test getting an item that doesn't exist."""
         token = self.get_auth_token(client)
@@ -197,6 +200,7 @@ class TestItemEndpoints:
         assert response.json['name'] == 'newitem'
         assert response.json['price'] == 12.34
 
+    @pytest.mark.requires_auth
     def test_put_update_existing_item(self, client):
         """Test PUT to update an existing item."""
         # Create item

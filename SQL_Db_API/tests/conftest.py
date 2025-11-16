@@ -12,11 +12,18 @@ import sqlite3
 # Add code directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../code'))
 
-# Mock flask_jwt if not available
+# Check if Flask-JWT is actually available (not mocked)
+FLASK_JWT_AVAILABLE = False
 try:
     import flask_jwt
-except ImportError:
-    # Create a mock flask_jwt module
+    # Verify it's the real module, not a mock
+    if hasattr(flask_jwt, '__version__') or hasattr(flask_jwt.JWT, '__call__'):
+        FLASK_JWT_AVAILABLE = True
+except (ImportError, AttributeError):
+    pass
+
+# Mock flask_jwt if not available
+if not FLASK_JWT_AVAILABLE:
     flask_jwt = Mock()
     flask_jwt.JWT = Mock(return_value=Mock())
     flask_jwt.jwt_required = lambda: lambda f: f  # Mock decorator
@@ -24,6 +31,21 @@ except ImportError:
     sys.modules['flask_jwt'] = flask_jwt
 
 from app import app as flask_app
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line(
+        "markers", "requires_auth: mark test as requiring JWT authentication"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip tests that require Flask-JWT if it's not available."""
+    skip_jwt = pytest.mark.skip(reason="Flask-JWT not available")
+    for item in items:
+        if "requires_auth" in item.keywords and not FLASK_JWT_AVAILABLE:
+            item.add_marker(skip_jwt)
 
 
 @pytest.fixture(scope='function')

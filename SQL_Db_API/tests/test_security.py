@@ -183,6 +183,7 @@ class TestIdentity:
         assert user.username == 'user2'
 
 
+@pytest.mark.requires_auth
 class TestAuthenticationIntegration:
     """Test authentication flow end-to-end."""
 
