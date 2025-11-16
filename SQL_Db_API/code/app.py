@@ -1,13 +1,18 @@
+import os
 from flask import Flask
 from flask_restful import Api
 from flask_jwt import JWT
+from dotenv import load_dotenv
 
 from security import authenticate, identity
 from user import UserRegister
 from item import Item, ItemList
 
+# Load environment variables
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = 'vish'
+app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 api = Api(app)
 
 jwt = JWT(app, authenticate, identity) # /auth
