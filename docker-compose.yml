@@ -1,0 +1,49 @@
+# Docker Compose for Flask RESTful API
+version: '3.8'
+
+services:
+  # Main Flask API service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flask-api
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-docker-dev-secret-key}
+      - DATABASE_PATH=data.db
+      - FLASK_ENV=development
+    volumes:
+      - ./SQL_Db_API:/app
+      - api_data:/app/data
+    command: python code/app.py
+    restart: unless-stopped
+    networks:
+      - flask-network
+
+  # Test runner service
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: flask-test
+    environment:
+      - SECRET_KEY=test-secret-key
+      - DATABASE_PATH=:memory:
+    volumes:
+      - ./SQL_Db_API:/app
+      - ./test-results:/app/test-results
+    command: pytest tests/ -v --cov=code --cov-report=html --cov-report=term
+    networks:
+      - flask-network
+    profiles:
+      - test
+
+volumes:
+  api_data:
+    driver: local
+
+networks:
+  flask-network:
+    driver: bridge

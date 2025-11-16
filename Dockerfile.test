@@ -1,0 +1,48 @@
+# Flask RESTful API - Test Dockerfile
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables for testing
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    TESTING=1
+
+# Install system dependencies including build tools
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    git \
+    libffi-dev \
+    libssl-dev \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY SQL_Db_API/requirements-dev.txt /app/requirements.txt
+
+# Install Python dependencies with better compatibility
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install Flask==2.0.3 Flask-RESTful==0.3.9 Werkzeug==2.0.3 \
+                pytest==7.3.1 pytest-flask==1.2.0 pytest-cov==4.1.0 \
+                passlib==1.7.4 python-dotenv==1.0.0 PyJWT==1.7.1 \
+                bandit safety flake8 black
+
+# Install Flask-JWT with --no-build-isolation
+RUN pip install Flask-JWT==0.3.2 --no-build-isolation || \
+    echo "Warning: Flask-JWT installation failed, some tests may be skipped"
+
+# Copy application code
+COPY SQL_Db_API/ /app/
+
+# Create test results directory
+RUN mkdir -p /app/test-results
+
+# Set environment for tests
+ENV SECRET_KEY=test-secret-key-for-docker
+
+# Default command runs all tests
+CMD ["pytest", "tests/", "-v", "--tb=short", "--cov=code", "--cov-report=html:/app/test-results/htmlcov", "--cov-report=term"]
