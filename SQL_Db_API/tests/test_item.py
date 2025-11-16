@@ -28,20 +28,21 @@ class TestItemModel:
         )
         self.connection.commit()
 
-        # Monkey patch the database connection
-        self.original_connect = sqlite3.connect
+        # Store original connection function
+        self._original_connect = sqlite3.connect
 
-        def mock_connect(db_name):
-            return sqlite3.connect(self.db_path)
+        # Monkey patch sqlite3.connect to use test database
+        def mock_connect(db_name, *args, **kwargs):
+            return self._original_connect(self.db_path, *args, **kwargs)
 
         sqlite3.connect = mock_connect
 
     def teardown_method(self):
         """Clean up temporary database."""
+        sqlite3.connect = self._original_connect
         self.connection.close()
         os.close(self.db_fd)
         os.unlink(self.db_path)
-        sqlite3.connect = self.original_connect
 
     def test_find_by_name_existing_item(self):
         """Test finding an item that exists."""

@@ -30,20 +30,21 @@ class TestAuthenticate:
         )
         self.connection.commit()
 
-        # Monkey patch the database connection
-        self.original_connect = sqlite3.connect
+        # Store original connection function
+        self._original_connect = sqlite3.connect
 
-        def mock_connect(db_name):
-            return sqlite3.connect(self.db_path)
+        # Monkey patch sqlite3.connect to use test database
+        def mock_connect(db_name, *args, **kwargs):
+            return self._original_connect(self.db_path, *args, **kwargs)
 
         sqlite3.connect = mock_connect
 
     def teardown_method(self):
         """Clean up temporary database."""
+        sqlite3.connect = self._original_connect
         self.connection.close()
         os.close(self.db_fd)
         os.unlink(self.db_path)
-        sqlite3.connect = self.original_connect
 
     def test_authenticate_valid_credentials(self):
         """Test authentication with correct username and password."""
@@ -122,20 +123,21 @@ class TestIdentity:
         )
         self.connection.commit()
 
-        # Monkey patch the database connection
-        self.original_connect = sqlite3.connect
+        # Store original connection function
+        self._original_connect = sqlite3.connect
 
-        def mock_connect(db_name):
-            return sqlite3.connect(self.db_path)
+        # Monkey patch sqlite3.connect to use test database
+        def mock_connect(db_name, *args, **kwargs):
+            return self._original_connect(self.db_path, *args, **kwargs)
 
         sqlite3.connect = mock_connect
 
     def teardown_method(self):
         """Clean up temporary database."""
+        sqlite3.connect = self._original_connect
         self.connection.close()
         os.close(self.db_fd)
         os.unlink(self.db_path)
-        sqlite3.connect = self.original_connect
 
     def test_identity_valid_user_id(self):
         """Test identity function with valid user ID."""
